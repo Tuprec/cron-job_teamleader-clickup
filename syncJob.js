@@ -28,8 +28,12 @@ cron.schedule('1,30 * * * * *', async () => {
         const data = response.data.data
         console.log('Status:', response.status);
         console.log('Response:', data);
-        console.log('Response:', data[0].current_phase);
-        
+        data.forEach(deal => {
+            if (!isYesterday(deal.closed_at)) {
+                return;
+            }
+            console.log(deal)
+        });
 
     } catch (error) {
         console.error('Fout bij synchronisatie:', error.message);
