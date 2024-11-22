@@ -1,15 +1,43 @@
 const cron = require('node-cron');
 const axios = require('axios');
 
-cron.schedule('1 * * * * *', async () => {
-  console.log('Sync job gestart om:', new Date().toISOString());
+function isYesterday(dateString) {
+    const closedDate = new Date(dateString);
+    const now = new Date();
 
-  try {
-    const api1Response = await axios.get('https://cards.fabtcg.com/api/search/v1/cards/?pitch_lookup=exact&pitch=3&name=infect+shot');
-    console.log('API 1 respons:', api1Response.data);
-  } catch (error) {
-    console.error('Fout bij synchronisatie:', error.message);
-  }
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
 
-  console.log('Sync job voltooid.');
+    return closedDate >= yesterday;
+}
+
+
+cron.schedule('1,30 * * * * *', async () => {
+    console.log('Sync job gestart om:', new Date().toISOString());
+
+    try {
+        const response = await axios.post(
+            'https://private-anon-f32c94881b-teamleadercrm.apiary-mock.com/deals.list',
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        const data = response.data.data
+        console.log('Status:', response.status);
+        console.log('Response:', data);
+        data.forEach(deal => {
+            if (!isYesterday(deal.closed_at)) {
+                return;
+            }
+            console.log(deal)
+        });
+
+    } catch (error) {
+        console.error('Fout bij synchronisatie:', error.message);
+    }
+
+    console.log('Sync job voltooid.');
 });
